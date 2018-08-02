@@ -65,8 +65,9 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		return
 	}
 	if done {
-		msg.Text = "You have finished this task(but I also marked it again)"
+		msg.Text = "You have finished this task"
 		bot.Send(msg)
+		return
 	}
 	if !done {
 		err = task.AddDone(task.DB, taskID, user)
