@@ -57,7 +57,7 @@ func main() {
 	}()
 
 	router := api.InitRouter()
-	mux := cors.AllowAll().Handler(router)
+	mux := cors.Default().Handler(router)
 	go func() {
 		log.Println(http.ListenAndServe("127.0.0.1:9200", mux))
 	}()
@@ -112,7 +112,6 @@ func commandInit() {
 	command.Register(command.Track, "track")
 	command.Register(command.Help, "help")
 	command.Register(command.Help, "start")
-	command.Register(command.Cooldown, "cooldown")
 	command.Register(command.Weblogin, "weblogin")
 
 	command.CQRegister(CQ.Workon, "workon")
