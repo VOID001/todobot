@@ -14,7 +14,7 @@ import (
 	CQ "github.com/Wheeeel/todobot/command/cq"
 	"github.com/Wheeeel/todobot/command/pipe"
 	tdstr "github.com/Wheeeel/todobot/string"
-	"github.com/Wheeeel/todobot/model"
+	"github.com/Wheeeel/todobot/task"
 	_ "github.com/go-sql-driver/mysql"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jmoiron/sqlx"
@@ -39,7 +39,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	model.DB = db
+	task.DB = db
 }
 
 func main() {

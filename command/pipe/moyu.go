@@ -10,7 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/cache"
-	"github.com/Wheeeel/todobot/model"
+	"github.com/Wheeeel/todobot/task"
 	"github.com/go-redis/redis"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
@@ -40,7 +40,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	ret = true
 	silientMode := false
 
-	atil, err := model.SelectATIByUserIDAndState(model.DB, userID, model.ATI_STATE_WORKING)
+	atil, err := task.SelectATIByUserIDAndState(task.DB, userID, task.ATI_STATE_WORKING)
 	if err != nil {
 		err = errors.Wrap(err, "Moyu")
 		log.Errorf("%s [skip the command]", err)
@@ -64,7 +64,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 		silientMode = true
 	}
 
-	ts, err := model.TaskByID(model.DB, ati.TaskID)
+	ts, err := task.TaskByID(task.DB, ati.TaskID)
 	if err != nil {
 		err = errors.Wrap(err, "Moyu")
 		log.Errorf("%s [skip the command]", err)
@@ -74,8 +74,8 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	rand.Seed(time.Now().UnixNano())
 	fm := friendlyMessage[rand.Intn(len(friendlyMessage))]
 	if ati.PhraseGroupUUID != "" {
-		tl, err := model.SelectPhrasesByGroupUUID(model.DB, ati.PhraseGroupUUID)
-		if err == nil && len(tl) > 0 {
+		tl, err := task.SelectPhrasesByGroupUUID(task.DB, ati.PhraseGroupUUID)
+		if err == nil {
 			t := tl[rand.Intn(len(tl))]
 			fm = t.Phrase
 		}
@@ -95,7 +95,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	if ati.NotifyID == chatID {
 		txtMsg = fmt.Sprintf("%s\n正在进行的任务: %s /donex%d", fm, ts, ts.TaskID)
 	}
-	err = model.IncWanderTimes(model.DB, ati.InstanceUUID)
+	err = task.IncWanderTimes(task.DB, ati.InstanceUUID)
 	if err != nil {
 		err = errors.Wrap(err, "Moyu")
 		return
@@ -103,23 +103,10 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	m := tg.NewMessage(chatID, txtMsg)
 	m.ReplyToMessageID = req.MessageID
 	if !silientMode {
-		sentm, err := bot.Send(m)
+		bot.Send(m)
 		mu.Lock()
 		cache.SetKeyWithTimeout(ati.InstanceUUID, fmt.Sprintf("%d", ati.Cooldown), time.Duration(ati.Cooldown)*time.Second)
 		mu.Unlock()
-		if err == nil {
-			go autoDelete(bot, &sentm, 10*time.Second)
-		}
 	}
 	return
-}
-
-func autoDelete(bot *tg.BotAPI, m *tg.Message, life time.Duration) {
-	delm := tg.NewDeleteMessage(m.Chat.ID, m.MessageID)
-	time.Sleep(life)
-	_, err := bot.Send(delm)
-	if err != nil {
-		err = errors.Wrap(err, "autoDelete")
-		log.Error(err)
-	}
 }

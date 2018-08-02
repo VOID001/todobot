@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/model"
+	"github.com/Wheeeel/todobot/task"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 )
@@ -31,7 +31,7 @@ func Del(bot *tg.BotAPI, req *tg.Message) {
 			bot.Send(msg)
 			return
 		}
-		tid, err := model.TaskRealID(model.DB, int(taskID), chatID)
+		tid, err := task.TaskRealID(task.DB, int(taskID), chatID)
 		if err != nil {
 			log.Error(errors.Wrap(err, "get realID error"))
 			msg.Text = "诶OAO出错了呢，请检查任务是否存在哦"
@@ -43,7 +43,7 @@ func Del(bot *tg.BotAPI, req *tg.Message) {
 	tlen := len(delList)
 	count := 0
 	for _, id := range delList {
-		t, err := model.TaskByID(model.DB, id)
+		t, err := task.TaskByID(task.DB, id)
 		if err != nil {
 			err = errors.Wrap(err, "Del")
 			log.Error(err)
@@ -57,7 +57,7 @@ func Del(bot *tg.BotAPI, req *tg.Message) {
 			bot.Send(msg)
 			return
 		}
-		atil, err := model.SelectATIByTaskIDAndState(model.DB, t.ID, model.ATI_STATE_WORKING)
+		atil, err := task.SelectATIByTaskIDAndState(task.DB, t.ID, task.ATI_STATE_WORKING)
 		if err != nil {
 			err = errors.Wrap(err, "Del")
 			log.Error(err)
@@ -70,7 +70,7 @@ func Del(bot *tg.BotAPI, req *tg.Message) {
 			bot.Send(msg)
 			return
 		}
-		err = model.DelTask(model.DB, id)
+		err = task.DelTask(task.DB, id)
 		if err == nil {
 			err = errors.Wrap(err, "Error when removing tasks by realID")
 			log.Error(err)

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/model"
+	"github.com/Wheeeel/todobot/task"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -17,7 +17,7 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 	if args[0] == "" {
 		args[0] = "unfin"
 	}
-	tl, err := model.TasksByChat(model.DB, req.Chat.ID)
+	tl, err := task.TasksByChat(task.DB, req.Chat.ID)
 	log.Infof("%+v", tl)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
@@ -28,14 +28,14 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 	switch args[0] {
 	case "unfin":
 		for _, item := range tl {
-			fcnt, err := model.FinishCountByTaskID(model.DB, item.ID)
+			fcnt, err := task.FinishCountByTaskID(task.DB, item.ID)
 			if err != nil {
 				msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 				bot.Send(msg)
 				return
 			}
 			if fcnt < item.EnrollCnt {
-				done, err := model.IsDone(model.DB, item.ID, user)
+				done, err := task.IsDone(task.DB, item.ID, user)
 				if err != nil {
 					msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 					bot.Send(msg)
@@ -52,7 +52,7 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 
 	case "all":
 		for _, item := range tl {
-			fcnt, err := model.FinishCountByTaskID(model.DB, item.ID)
+			fcnt, err := task.FinishCountByTaskID(task.DB, item.ID)
 			if err != nil {
 				msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 				bot.Send(msg)
@@ -62,7 +62,7 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 		}
 	case "done":
 		for _, item := range tl {
-			fcnt, err := model.FinishCountByTaskID(model.DB, item.ID)
+			fcnt, err := task.FinishCountByTaskID(task.DB, item.ID)
 			if err != nil {
 				msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 				bot.Send(msg)
